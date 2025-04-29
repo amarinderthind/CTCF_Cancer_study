@@ -1,0 +1,285 @@
+---
+title: "Extarction of loop vs mutational matrix"
+author: "Amarinder Thind"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+##Overlping VCF and Motif files are created on Gadi computing using "bed tools jobscript"
+#### Here we are summarizing mutation into a table
+
+
+## /home/singh/ vs /Users/athind/ (Mac)
+setwd('/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/step1-intersect-vcf-with-loop-motif/intersected_SNV_only/')
+files <- list.files(pattern='*.vcf')
+files
+ ## Extract sample names
+trim_names  <- sub("_vs_.*", "", files)
+trim_names
+```
+
+
+```{r}
+path <- '/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/step1-intersect-vcf-with-loop-motif/intersected_SNV_only/'
+
+# Ensure metadata is read and row names are set correctly
+meta <- read.csv("/home/singh/Dropbox/Amarinder/Sample_level_data_v11_short.csv", sep=',')
+row.names(meta) <- meta$sample
+
+# Loop through files and ensure we filter files and names together
+l <- list()  # Initialize an empty list for storing mutation data
+valid_files <- list()  # To store the valid file names
+
+for (i in seq_along(files)) {
+  file_path <- file.path(path, files[i])
+  if (file.exists(file_path) && file.info(file_path)$size > 0) {
+    data <- tryCatch(read.delim(file_path, header = FALSE), 
+                     error = function(e) NULL)
+    if (!is.null(data) && ncol(data) >= 6) {
+      l[[i]] <- data[, 6]  # Extract the 6th column and store in the list
+      valid_files[[i]] <- files[i]  # Store the valid file names
+    } else {
+      print(paste("Not enough columns in file:", files[i]))
+      l[[i]] <- NULL  # Store NULL if file has issues
+    }
+  } else {
+    print(paste("File is empty or missing:", files[i]))
+    l[[i]] <- NULL  # Store NULL for empty or missing files
+  }
+}
+
+# Filter out NULL elements from l and valid_files together
+valid_l <- l[!sapply(l, is.null)]
+valid_trim_names <- trim_names[!sapply(l, is.null)]  # Filter trim_names to match valid files
+
+## Now you can safely create your list of data frames
+df_list <- lapply(seq_along(valid_l), function(i) {
+  df <- as.data.frame(table(valid_l[[i]]))  # Create data frame from table
+  names(df) <- c("Loop_id", valid_trim_names[i])  # Rename columns to match the sample name
+  return(df)  # Return data frame
+})
+
+# Merge all data frames by 'Loop_id'
+final_data <- Reduce(function(x, y) merge(x, y, by='Loop_id', all=TRUE), df_list)
+
+# View final column names
+colnames(final_data)
+
+```
+
+
+```{r}
+ ## Check if all the samples are listed in metaData
+# Flatten the list if needed
+trim_names_vector <- unlist(trim_names)
+#files[which(trim_names_vector %in% meta$SampleName)]
+#trim_names_vector[which(trim_names_vector %in% meta$SampleName)]
+trim_names_vector[!trim_names_vector %in% meta$SampleName]
+
+```
+```{r}
+## adding samples back to data with "no_mutations detected" (to remove the comparison bias)
+final_data$`CSCC_0017-P1` <- 0
+final_data$`CSCC_0033-M1` <- 0
+final_data$`CSCC_0034-M1` <- 0
+final_data$`CSCC_0156-P1` <- 0
+final_data$`CSCC_0157-P1` <- 0
+final_data$`CSCC_0123-M1` <- 0
+
+## why not 123 ?? 
+```
+
+
+```{r}
+# Filter out rows where Condition is "Cell_Met" in meta
+meta <- subset(meta, Group2 != "Cell_line")
+
+```
+
+
+```{r}
+# Check if there are other sample than cell-lines which are not intersected?
+column_names <- colnames(final_data)
+# Check which column names are not in meta$SampleName
+column_names[!column_names %in% meta$SampleName]
+```
+
+
+```{r}
+# intersect meta with final_data
+meta <- meta[meta$SampleName %in% colnames(final_data), ]
+
+## EXCLUDE - Extreme GC Bias Sample
+gc_sample <- c("CSCC_0015-M1","CSCC_0023-M1","CSCC_0021-P1")
+meta <- meta[!(meta$SampleName %in% gc_sample), ]
+
+
+names <- final_data$Loop_id
+final_data <- final_data[,-1]
+row.names(final_data) <- names
+```
+
+```{r}
+### NA entries with zero 
+final_data[is.na(final_data)] <- 0
+```
+
+
+```{r}
+
+## remove cell lines/other sample data from final data
+## Earlier removed from meta
+final_data <- final_data[, colnames(final_data) %in% c(meta$SampleName) ]
+
+```
+
+
+```{r}
+## Any loop which is not mutated in any sample
+## These loops were only muated in the samples, we removed
+row_sums <- apply(final_data, 1, sum, na.rm = TRUE)
+head(final_data[row_sums == 0, ])
+```
+```{r}
+# Exclude rows where the sum is zero
+final_data <- final_data[row_sums != 0, ]
+```
+
+```{r}
+
+head(final_data[,(ncol(final_data)-10):ncol(final_data)])
+##note last 5 samples has zero mutations
+```
+
+
+```{r}
+# Sort the filtered dataframe by the 'Value' column (ascending order)
+meta <- meta[order(meta$Group2), ]
+rownames(meta) <- meta$SampleName
+
+#write.table(final_data,"loop_matrix.csv", sep = ',', row.names = F)
+ 
+#### sort final data 
+#final_data1 <- final_data[rownames(meta), ]
+final_data <- final_data[,match(rownames(meta), colnames(final_data)) ]
+
+rownames(meta) == colnames(final_data) ### check it it matching with 
+
+#write.csv(final_data,"../loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv")
+```
+
+```{r}
+##Summarizing mutations for each Group2
+# library(readxl)
+# loop_matrix <- read_excel("loop_matrix.xlsx")
+
+loop_matrix <- final_data
+
+loop_matrix[is.na(loop_matrix)] <- 0
+
+Pnm_samples <- meta[(meta$Group2 =='PRI_NonMet'),"SampleName"]
+Pnm_samples
+
+PM_samples <- meta[(meta$Group =='PRI_Met'),"SampleName"]
+PM_samples
+
+
+Met_samples <- meta[(meta$Group =='Met'),"SampleName"]
+Met_samples
+
+MetALL_samples <- c(Met_samples,PM_samples)
+MetALL_samples
+
+
+```
+```{r}
+
+## do not change the order, we are adding extra col after this
+loop_matrix$`total_muta_per_loop` <- rowSums(loop_matrix[,1:ncol(loop_matrix)]) 
+loop_matrix$`avg.ALL` <- rowMeans(loop_matrix[,1:(ncol(loop_matrix)-1)]) ## do not change the order, we are adding extra col after this
+head(loop_matrix[,(ncol(loop_matrix)-5):ncol(loop_matrix)])
+
+```
+
+
+```{r}
+## number of Primary in loop
+n_MetALL_intersect <- ncol(loop_matrix[,colnames(loop_matrix) %in% MetALL_samples ])
+n_MetALL_intersect
+
+## Calc average of MEt ALL
+loop_matrix$`avg.mutated_loop_MetALL` <- rowSums(loop_matrix[,colnames(loop_matrix) %in% MetALL_samples ])/n_MetALL_intersect
+loop_matrix$`mutated_loop_MetALL` <- rowSums(loop_matrix[,colnames(loop_matrix) %in% MetALL_samples ])
+```
+
+
+
+```{r}
+## number of Mets in loop
+n_PNM_intersect <- ncol(loop_matrix[,colnames(loop_matrix) %in% Pnm_samples ])
+n_PNM_intersect
+## Calc average of Met
+loop_matrix$`avg.mutated_loop_PNM` <- rowSums(loop_matrix[,colnames(loop_matrix) %in% Pnm_samples ])/n_PNM_intersect
+loop_matrix$`mutated_loop_PNM` <- rowSums(loop_matrix[,colnames(loop_matrix) %in% Pnm_samples ])
+
+head(loop_matrix[,(ncol(loop_matrix)-10):ncol(loop_matrix)])
+
+# loop_matrix$`avg.mutated loop/sample (Prim-nonMET)` <- rowSums(!(loop_matrix[,c(20:24,32:35)])==0)/9
+# loop_matrix$`avg.mutated loop/sample (Prim-MET)` <- rowSums(!(loop_matrix[,c(13,26,28,30,36)])==0)/5
+```
+```{r}
+
+# Check the range of your data
+range(loop_matrix$total_muta_per_loop)
+
+# Use the range to create appropriate breaks
+min_value <- min(loop_matrix$total_muta_per_loop)
+max_value <- max(loop_matrix$total_muta_per_loop)
+
+# Define breaks from the minimum to the maximum value, with a step of 1
+breaks_seq <- seq(floor(min_value), ceiling(max_value), 1)
+
+# Now plot the histogram with adjusted breaks
+hist(loop_matrix$total_muta_per_loop, 
+   main = "Histogram of Number of Mutated Samples vs. Frequency of Loops",
+xlab = "Number of Mutated Samples",
+ylab = "Frequency of Loops",
+     breaks = breaks_seq, 
+     col = "lightblue")
+
+
+
+hist(loop_matrix$avg.ALL, 
+     main = "Histogram of Avg Mutations per Loop", 
+     xlab = "Average Mutations per Loop", 
+     ylab = "Frequency", 
+     col = "lightblue")
+
+hist(loop_matrix$avg.mutated_loop_MetALL, 
+     main = "Histogram of Avg Mutations per Loop", 
+     xlab = "Average Mutations per Loop", 
+     ylab = "Frequency", 
+     col = "lightblue")
+
+hist(loop_matrix$avg.mutated_loop_PNM, 
+     main = "Histogram of Avg Mutations per Loop", 
+     xlab = "Average Mutations per Loop", 
+     ylab = "Frequency", 
+     col = "lightblue")
+
+```
+
+
+
+ 
+
+
