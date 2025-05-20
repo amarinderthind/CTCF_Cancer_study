@@ -1,4 +1,4 @@
-## title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops fggfgdfgfgfg"
+## title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops"
 #### 1. Load Required Packages
 library(readr)
 library(dplyr)
