@@ -1,16 +1,5 @@
----
-title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops jfjf"
-output: html_document
-date: "`r Sys.Date()`"
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+## title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops fggfgdfgfgfg"
 #### 1. Load Required Packages
-
-```{r}
-
 library(readr)
 library(dplyr)
 library(DESeq2)
@@ -20,10 +9,7 @@ library(ggrepel)
 library(RColorBrewer)
 library(foreach)
 library(doParallel)
-```
-#### 2. Load Data
 
-```{r}
 # Load loop annotations
 loops <- read_csv("/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv")
 #loops <- read_csv("/path/to/loops-vs-mutational-matrix.csv")
@@ -40,10 +26,8 @@ anno2 <- anno2 %>%
 common <- intersect(anno2$wgs_samples, anno2$totalRNAseq)
 common1 <- common[!grepl("MCL", common, ignore.case = TRUE) & !is.na(common)]
 print(paste("Number of shared samples (excluding cell lines):", length(common1)))
-```
 
 #### 3. Prepare Raw Count Matrix
-```{r}
 
 
 # Load raw counts
@@ -62,9 +46,7 @@ rawcount_ori[is.na(rawcount_ori)] <- 0
 # Filter genes expressed in ≥15% of samples
 keep <- rowSums(rawcount_ori > 0) >= round(ncol(rawcount_ori) * 0.15)
 rawcount_ori <- rawcount_ori[keep,]
-```
 ####4. Load Gene Lists Associated with Loops
-```{r}
 gene_list_loop <- read.csv("/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/Step1.b-extraction-of-loops-gene-list/Loops_with_gene_list_combine-inside-and-1000bp-outside-.csv")
 
 #gene_list_loop <- read_csv("/path/to/Loops_with_gene_list.csv")
@@ -73,20 +55,16 @@ gene_list_loop$ensembl_gene_id <- gsub("\\s+", "", gene_list_loop$ensembl_gene_i
 
 #all_genes <- read_csv("/path/to/all_gene_biomart.csv")
 all_genes <- read.csv("/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf/all_gene_biomart.csv") 
-```
 ####5. Preprocess Loops for DE Analysis
-```{r}
 
 # Keep only columns corresponding to shared RNA-seq samples
 loops <- loops[, colnames(loops) %in% c(anno2$totalRNAseq, "...1")]
 
 # Filter loops with mutations present in at least 4 samples
 loops2 <- loops[rowSums(loops > 0) > 3, ]
-```
 
 #### 6. Differential Expression Analysis Using DESeq2
 
-```{r}
 
 # Parallelization Setup
 numCores <- detectCores() - 2
@@ -172,9 +150,7 @@ filtered_df$new_padj <- p.adjust(filtered_df$pvalue, method = "BH")
 
 # Stop parallel processing
 stopCluster(cl)
-```
 ####7. Post-processing and Summary Table Creation
-```{r}
 
 
 # Format output
@@ -202,4 +178,3 @@ loops_with_sigDEG <- loops2[loops2$...1 %in% loops_sigDEG, ]
 # Save final outputs (if needed)
 # write.csv(Final_summary2, "Final_summary3_association_genesDE_vs_mut.csv")
 # write.csv(loops_with_sigDEG, "Loops_with_Significant_DEGs.csv")
-```
