@@ -1,7 +1,7 @@
 ## Title: CTCF Loop Differential Expression and Mutation Analysis
 ## Author: Amarinder Thind
 
-# Load libraries
+# Load following libraries 
 library(readr)
 library(dplyr)
 library(tidyr)
