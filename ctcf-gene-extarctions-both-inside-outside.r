@@ -1,15 +1,21 @@
-# Title: "ctcf loop genes extraction both inside and outside loop upto 1000bp either side with ensemble-id"
-#author: "Amarinder Thind"
+# Title: "CTCF loop genes extraction both inside and outside loop upto 1000bp either side with ensemble-id"
+# Author: "Amarinder Thind"
+
+library(biomaRt)
+library(parallel)
+library(dplyr)
+
 
 setwd('Path')
 
 ## Load CTCFbs motif bed file with 3' and 5' Anchor 
+
 motif_1806_hg38 <- read.delim("motifs_with_loops_sorted_hg38_1806.bed", header=FALSE)
 
 # In here, the first side is end of the motif and second side is starting of the motif ## since we captured inside part only 
 # Add additional 1000 bp on left side of first motif (of Loop XX) and 1000 bp on right side of second motif ( of Loop Xx)
 
-#step1 # separate the 5 prime-motif site from 3 prime-motif (will end up in 903/1806) entries for each
+# separate the 5 prime-motif site from 3 prime-motif (will end up in 903/1806) entries for each
 
 CTCF_5site <- motif_1806_hg38[motif_1806_hg38$V5 =="5_CTCF",] 
 CTCF_3site <- motif_1806_hg38[motif_1806_hg38$V5 =="3_CTCF",]
@@ -28,14 +34,11 @@ merged_df <- merge(CTCF_5site[, c("V1",   "V6","V5", "start_1000")],
 # View the merged data frame
 head(merged_df)
 
-library(biomaRt)
-
-
 # Connect to the Ensembl database
 mart <- useMart("ensembl")
 mart <- useDataset("hsapiens_gene_ensembl", mart)
 
-##confirm loaded reference is hg38 or not?
+## confirm loaded reference is hg38 or not?
 listDatasets(mart)
 listAttributes(mart)
 
@@ -61,10 +64,6 @@ regions_list5 <- apply(regions_5, 1, function(row) {
 
 #write.csv(regions_5,"modified-Co-ordinates-loop_with-1000k.csv")
  
-
-library(biomaRt)
-library(parallel)
-
 # Function to query BioMart and add identifiers
 
 get_data_with_identifier <- function(region, mart, attributes, filters) {
@@ -109,8 +108,6 @@ parallel_get_data <- function(regions_list, mart, attributes, filters) {
 
 # Query BioMart for each region in parallel and combine results
 all.genes_5 <- parallel_get_data(regions_list5, mart, attributes, filters)
-
-library(dplyr)
 
 # Group by 'identifier' and summarize other columns
 aggregated_data_5 <- all.genes_5 %>%
