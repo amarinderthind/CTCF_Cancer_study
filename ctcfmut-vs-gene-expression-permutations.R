@@ -1,5 +1,7 @@
-# Load necessary libraries
+## Permutation test to test the significance of number of loops which are associated with gene-expression
+## 1000 permuatition were performed (1000*284 DGE analysis)
 
+# Load necessary libraries
 library(readr)
 library(readxl)
 
