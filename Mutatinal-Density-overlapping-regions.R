@@ -1,3 +1,5 @@
+## Mutatinal Density comparison of overlapping-regions
+
 # Load necessary libraries
 library(GenomicRanges)
 library(dplyr)
@@ -118,8 +120,6 @@ mutation_df <- do.call(rbind, lapply(names(overlapping_regions_list), function(r
                           NA)
   return(mut_count)
 }))
-
-
 
 # CTCF-only (non-overlapping)
 region_sizes[["CTCFbs_Only"]] <- sum(width(ctcf_nonoverlapping_gr))
