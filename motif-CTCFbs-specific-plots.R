@@ -1,4 +1,4 @@
-### Mutation density Across ±1kb CTCF Binding Sites and CTCFbs itself (wihtout substitution type) and plot 2 per sample multiplet
+### Mutation density Across CTCF Binding Sites (Normalized positions) 
 ## Length of loops distribution
 ## TMB CTCFbs vs Surround 1k (Stack) per sample (one plot not multiplet)
 
@@ -53,7 +53,6 @@
 # #write.csv(mutation_positions,"mutation_positions_summary_initial-ctcfbs-surrenounding_72_samples.csv")
 
 ######################################################################################################################
-###############################
 # Load necessary libraries
 library(ggplot2)
 library(dplyr)
@@ -81,11 +80,9 @@ df_sorted <- df_sorted %>%
   ) %>%
   ungroup()  # Remove grouping after mutation
 
-
 # Assuming df_sorted is the data with the diff column calculated (from previous steps)
 
 library(scales)
-
 # Plot the distribution of loop lengths (differences) as a density plot with custom x-axis labels
 
 ggplot(df_sorted, aes(x = diff)) +
@@ -111,7 +108,7 @@ ggplot(df_sorted, aes(x = diff)) +
 ctcf_gr <- GRanges(seqnames = ctcf_regions$chrom,
                    ranges = IRanges(start = ctcf_regions$start, end = ctcf_regions$end))
 
-# Step: Define the surrounding region ±1kb (1000 bp) around each CTCF region
+# Define the surrounding region ±1kb (1000 bp) around each CTCF region
 surrounding_gr <- GRanges(
   seqnames = seqnames(ctcf_gr),
   ranges = IRanges(
@@ -120,20 +117,20 @@ surrounding_gr <- GRanges(
   )
 )
 
-# Step: Merge overlapping regions (CTCF regions + surrounding ±1kb)
+# Merge overlapping regions (CTCF regions + surrounding ±1kb)
 merged_gr <- reduce(c(ctcf_gr, surrounding_gr))
 
-##################
-## Load mutational data ##################
+
+## Load mutational data with positions
 
 mutation_positions <- read.csv("motif-position-analysis/mutation_positions_summary_72_samples.csv")
 mutation_positions2 <- mutation_positions
  
-# Step 6: Create a GenomicRanges object for mutations
+# Create a GenomicRanges object for mutations
 mut_gr <- GRanges(seqnames = mutation_positions$CHROM,
                   ranges = IRanges(start = mutation_positions$POS, end = mutation_positions$POS))
 
-# Step 7: Find mutations in merged CTCF + surrounding regions
+# Find mutations in merged CTCF + surrounding regions
 overlaps <- findOverlaps(mut_gr, merged_gr)
 #View(as.data.frame(overlaps)) ## this has index of mut_gr && merged_gr which hit against each other
 #View(as.data.frame(merged_gr))
@@ -150,7 +147,10 @@ normalized_positions <- data.frame(
   Sample = mutations_in_ctcf$Sample
 )
 
-#################### PLOT 
+####################
+##    PLOT 
+####################
+
 # Summarize mutation recurrence
 total_samples <- length(unique(normalized_positions$Sample))  # Count the unique sample IDs
 
@@ -176,7 +176,9 @@ p <- ggplot(recurrence_summary, aes(x = Normalized_POS, y = Recurrence_Rate_per_
 # Save the plot with high resolution and custom size
 ggsave("motif-position-analysis/out-figures/1000bp-ctcf-mean-all-samples-per-mb.png", plot = p, dpi = 600, width = 7, height = 5, units = "cm", bg="white")
 
-################ PLOT 2
+################ 
+### PLOT 2
+################
 
 # Summarize mutation recurrence for each sample
 recurrence_summary2 <- normalized_positions %>%
