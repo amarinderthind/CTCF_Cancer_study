@@ -1,4 +1,4 @@
-## Title: CTCF Loop Differential Expression and Mutation Analysis
+## Title: Computes Spearman correlation and AUC to assess whether gene expression levels are associated with the mutation status of CTCF loops within cSCC subgroups.
 ## Author: Amarinder Thind
 
 # Load following libraries 
@@ -77,7 +77,6 @@ temp_metastasis <- data.frame(lapply(temp_metastasis, as.numeric))
 # Compute row sums for mutation counts (0 or 1 as binary)
 combined$sumPNM <- rowSums(temp_primary, na.rm = TRUE)
 combined$sumPM <- rowSums(temp_metastasis, na.rm = TRUE)
-
 
 # Identify top loops
 plot_loops <- combined %>%
