@@ -1,2 +1,17 @@
-This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
-To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/
+Academic Non-Commercial Use License
+
+Copyright (c) 2025 University of Wollongong
+
+This pipeline code is provided for academic and non-commercial research purposes only.
+
+Permission is hereby granted to use, copy, and distribute this pipeline code and its documentation for academic, non-commercial research purposes, provided that:
+
+1. The original publication describing this pipeline is properly cited in any resulting publications.
+2. This copyright notice and this license are retained with all copies.
+3. Any use of the pipeline code for commercial purposes requires prior written permission from the author(s).
+4. Modification or redistribution of this pipeline code, including derivative works, also requires prior written permission, even for academic purposes.
+
+This pipeline code is provided "as is", without warranty of any kind, express or implied.
+
+For commercial licensing inquiries, please contact: thind.amarinder@gmail.com or athind@uow.edu.au
+
