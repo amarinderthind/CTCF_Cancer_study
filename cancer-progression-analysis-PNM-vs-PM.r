@@ -1,37 +1,34 @@
----
-title: "Extraction of Loop vs Mutational Matrix"
-author: "Amarinder Thind"
-date: "`r Sys.Date()`"
-output:
-  html_document: 
-    default: true
-  pdf_document: 
-    default: true
----
+# Title: "Cancer progression Analysis (diffentially expressed loops) and integrated RNA-Seq "
+# Author: "Amarinder Thind"
+setwd("/Users/athind/")
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_knit$set(root.dir = "/Users/athind/")
-
-```
-
-```{r}
 #### DE for loop 
+library(dplyr)
 library(readr) 
-Mut_matrix <- read_csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv")
+library(tidyr)
+library(ggplot2)
+library(DESeq2)
+library(stringr)
+library(purrr)
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(ggrepel)
+#library(DEGreport)
+library(RColorBrewer)
+library(pheatmap)                
+library(reshape2)
+
+Mut_matrix <- read_csv("loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv")
 Mut_matrix <- as.data.frame(Mut_matrix)
 rownames(Mut_matrix) <- Mut_matrix$...1
 Mut_matrix <- Mut_matrix[,-1]
  
 #Mut_matrix[is.na(Mut_matrix)] <- 0
-
 final_data <- Mut_matrix
-```
 
-
-```{r}
 # Ensure metadata is read and row names are set correctly
-meta <- read.csv("Dropbox/Amarinder/Sample_level_data_v11_short.csv", sep=',')
+meta <- read.csv("Sample_level_data_v11_short.csv", sep=',')
 row.names(meta) <- meta$sample
 meta <- subset(meta, Group %in% c("PRI_NonMet", "PRI_Met"))
 
@@ -39,23 +36,16 @@ meta <- subset(meta, Group %in% c("PRI_NonMet", "PRI_Met"))
 ## EXCLUDE - Extreme GC Bias Sample
 gc_sample <- c("CSCC_0015-M1","CSCC_0023-M1","CSCC_0021-P1")
 meta <- meta[!(meta$SampleName %in% gc_sample), ]
+
 # intersect meta with Mut_matrix
 meta <- meta[meta$SampleName %in% colnames(Mut_matrix), ]
-
  
 # Sort the filtered dataframe by the 'Value' column (ascending order)
 meta <- meta[order(meta$Group), ]
 rownames(meta) <- meta$SampleName
-```
-###  
-
-```{r}
 
 # Filter Mut_matrix to include only the matched samples from meta
 Mut_matrix <- Mut_matrix[,  meta$SampleName, drop = FALSE]
-
- 
-
 
 dim(Mut_matrix)
 mut <- Mut_matrix[rowSums(Mut_matrix[,1:ncol(Mut_matrix)])>3,] 
@@ -76,17 +66,14 @@ setdiff(rownames(mut1_pval), rownames(meta))
 
 # Create named vector
 named_group <- setNames(meta$Group, rownames(meta))
+
 # Transfer group values
 mut1_pval$group <- named_group[rownames(mut1_pval)]
-
 
 #mut1_pval$group <- c(rep("Met", 39), rep("Pm", 13), rep("PNM", 13))
 
 head(mut1_pval[,(ncol(mut1_pval)-10):ncol(mut1_pval)])
-```
 
-
-```{r}
 # Function to perform chi-square or Fisher's test
 
 compare_groups <- function(data, var) {
@@ -98,7 +85,6 @@ compare_groups <- function(data, var) {
   }
   return(data.frame(variable = var, p_value = test$p.value))
 }
-
 
 # Ensure binary data conversion (0 for no mutation, 1 for mutation)
 Primary_only <- mut1_pval
@@ -112,7 +98,7 @@ results <- lapply(var_names, function(var) compare_groups(Primary_only, var))
 results <- do.call(rbind, results)
 
 # Adjust p-values using BH method
-results$p_adjusted <- p.adjust(results$p_value, method = "BH")
+#results$p_adjusted <- p.adjust(results$p_value, method = "BH")
 
 # Combine data and results
 Primary_only <- t(Primary_only)
@@ -144,36 +130,14 @@ combined_primary$sumPM <- rowSums(temp_metastasis, na.rm = TRUE)
 # Verify binary sums and inspect final results
 head(combined_primary[, c("sumPNM", "sumPM")])
 
-
-```
-```{r}
 print("Range of Primary no Met samples mutations in different loop")
  range(combined_primary$sumPNM)
 
  print("Range of primary Metastases samples mutations in different loop")
  range(combined_primary$sumPM)
 
-```
-
-
-```{r}
-#write.csv(combined_primary,"Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/step2-extraction-of-loop-mutations-matrix/DE_loops_PNM_vs_MetALL_combined-Dec2024.csv")
-```
-
-
-```{r}
-#  subset top 10 loops based on p-value 
-
-# library(dplyr) 
-# 
-# top_loops <- combined_primary %>% 
-#   arrange(p_value) %>% 	#Arrange rows by padj values
-#   filter(p_value < 0.2) %>%   #filter based on logFC
-#   pull(variable) 
-
-
-
-library(dplyr)
+#write.csv(combined_primary,"DE_loops_PNM_vs_MetALL_combined-Dec2024.csv")
+#  subset top loops based on p-value 
 
 # Assuming combined_primary is your data frame
 top_loops <- combined_primary %>%
@@ -182,22 +146,16 @@ top_loops <- combined_primary %>%
   pull(variable)  # Select the 'variable' column
 
 top_loops
-top_loops
 
-## JUSt to show here
-
-temp1 <- combined_primary %>% 
+###
+  temp1 <- combined_primary %>% 
   arrange(p_value) %>% 	#Arrange rows by padj values
   filter( p_value <0.3 & (sumPNM <= 1 | sumPM <= 1))  
 
 temp1[,c("sumPNM","sumPM")]
-```
-```{r}
+
 # If loop names are in rownames
 temp1$loop_id <- rownames(temp1)
-
-library(tidyr)
-library(ggplot2)
 
 # Reshape for plotting
 plot_data <- temp1 %>%
@@ -222,21 +180,9 @@ p <- ggplot(plot_data, aes(x = reorder(loop_id, -abs(Count_mod)), y = Count_mod,
 
 print(p)
 
+#ggsave("DEloop_PNM-vsPM.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white")
 
-
-#ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/DEloop_PNM-vsPM.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white")
-
-```
-
-
-```{r}
-```
- 
-
-
-```{r}
 loops <- combined_primary
-
 colnames(loops)
 end <- ncol(loops)-5 ## remove last five entries contain non-samples cols
 loops2 <- loops[,1:end]
@@ -249,34 +195,18 @@ common <- intersect(meta$wgs_samples,meta$totalRNAseq)
 common
 
 meta <- subset(meta, SampleName %in% common)
-```
 
-
-```{r}
 print(paste("Total number of RNAseq samples :",nrow(meta),"out of ",ncol(loops2)))
 table(meta$Group)
-```
-
-
-
-```{r}
-library(DESeq2)
 
 ## Prepare the gene list for the selected loop (calling it top loop here)
-gene_list_loop <- read.csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/Step1.b-extraction-of-loops-gene-list/Loops_with_gene_list_combine-inside-and-1000bp-outside-.csv")
+gene_list_loop <- read.csv("Loops_with_gene_list_combine-inside-and-1000bp-outside-.csv")
 
 # Remove trailing commas from the 'genes' column
 gene_list_loop$hgnc_symbol <- gsub("\\s+", "", gene_list_loop$hgnc_symbol)
 gene_list_loop$ensembl_gene_id <- gsub("\\s+", "", gene_list_loop$ensembl_gene_id)
-
-
-
  
-all_genes <- read.csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf/all_gene_biomart.csv") 
-
-library(dplyr)
-library(stringr)
-library(purrr)
+all_genes <- read.csv("all_gene_biomart.csv") 
 
 # Clean lookup table (remove Ensembl version suffix like ".1")
 all_genes <- all_genes %>%
@@ -322,16 +252,11 @@ if (length(unmapped_ids) > 0) {
   cat(sprintf("Total unmapped IDs: %d\n", length(unmapped_ids)))
 }
 
-
-
-
- ###### Prepare LOOP GENE LIST
+###### Prepare LOOP GENE LIST
 intersect_genes <- gene_list_loop[gene_list_loop$identifier %in% top_loops,]
 
 print("Top DE loops with gene names")
 print(intersect_genes[colnames(intersect_genes) %in% c( "identifier","gene2merged")])
-
-
 
 ## extract clean gene list
 DE_loops_related_genes <- intersect_genes$ensembl_gene_id 
@@ -345,14 +270,7 @@ split_genes <- unlist(strsplit(cleaned_genes, ",\\s*"))
 split_genes <- trimws(split_genes)
 # Remove duplicate entries
 all_Loopgenes <- unique(split_genes)
-```
-
-
-```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
+ 
 # Prepare long-format mutation data for top loops
 temp1_long <- temp1 %>%
   pivot_longer(cols = c(sumPM, sumPNM), names_to = "Group", values_to = "MutCount") %>%
@@ -396,14 +314,7 @@ p <- ggplot(temp1_long, aes(x = reorder(loop_id, -MutCount), y = MutCount, fill 
 
 print(p)
 
-
-#ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/DEloop_PNM-vsPM_with_genes_info.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white")
-
-```
-
-
-```{r}
- 
+#ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/DEloop_PNM-vsPM_with_genes_info.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white") 
 
 # Specify the order of loop identifiers
 ordered_loops <- c("loop_818", "loop_937", "loop_70", "loop_390", "loop_284", 
@@ -417,8 +328,6 @@ ordered_intersect_genes <- intersect_genes %>%
 
 library(gridExtra)
 library(grid)  # <-- Load this to use gpar()
-
-
 
 # View the reordered dataset with loop_id and hgnc_symbol
 shorttb <-ordered_intersect_genes[, c("identifier", "hgnc_symbol")]
@@ -450,26 +359,15 @@ for (i in 1:nrow(shorttb)) {
 grid.newpage()
 grid.draw(table_plot)
 # Save the table as an image
-ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/ordered_intersect_genes_table.png", table_plot, width = 10, height = 8, dpi = 300)
+ggsave("ordered_intersect_genes_table.png", table_plot, width = 10, height = 8, dpi = 300)
 dev.off()
  
-# Save to PDF to verify if italics render properly
-grid.newpage()
-pdf("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/ordered_intersect_genes_table.png", width = 10, height = 8)
-grid.draw(table_plot)
-dev.off()
-
-```
-
-
-```{r}
 library(readr)
-rawcount_ori <- read_csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/feature_count-v3-80samples/ftype-exon-fattr-gene_id/countmatrix_genes_Modified_samp_names-unique-ensemble-id-v2.csv")
+rawcount_ori <- read_csv("ftype-exon-fattr-gene_id/countmatrix_genes_Modified_samp_names-unique-ensemble-id-v2.csv")
 # Set the first column as rownames
 rawcount_ori <- as.data.frame(rawcount_ori)
 rownames(rawcount_ori) <- rawcount_ori[[1]]
 rawcount_ori <- rawcount_ori[, -1]
-
 
 ## Replace NAs by zero and changing the input to required format
 #rawcount_ori <- round(rawcount_ori) 
@@ -479,27 +377,12 @@ rawcount_ori[is.na(rawcount_ori)] <- 0
 keep <- rowSums(rawcount_ori > 0) >= round(ncol(rawcount_ori) * 0.15)
 rawcount <- rawcount_ori[keep,]
 
-
-
 colnames(rawcount)
-
-```
-
-
-
-
-```{r}
 
 #rawcount <- rawcount[rownames(rawcount) %in% all_Loopgenes,]
 head(rawcount)
 #rawcountCoding <- rawcount[row.names(rawcount) %in%  all_coding_genes$hgnc_symbol,]
-
-```
-
-
-```{r}
-######################################3
-#anno <- read_csv("Dropbox/Amarinder/Sample_level_data_v11_short.csv")
+#anno <- read_csv("Sample_level_data_v11_short.csv")
 
 anno <- meta
 
@@ -510,22 +393,15 @@ setdiff( anno$SampleName,colnames(rawcount))
 firstC<-"PRI_NonMet"       #case1 #case2 #case3 etc          
 SecondC <-"PRI_Met"   
 
-anno <- subset(anno, Group == firstC | Group == SecondC ) #| group == "Primary (To be updated)"
-
-
-## discard sample CSCC_0023-M1
+anno <- subset(anno, Group == firstC | Group == SecondC ) 
+                  
+## Discard sample CSCC_0023-M1
 anno <- anno[anno$SampleName != "CSCC_0023-M1", ]
 
 rawcount <- rawcount[,names(rawcount) %in% anno$SampleName]
 
-
-
 anno <- anno[match(colnames(rawcount), anno$SampleName),] ## reordering anno row with colnmaes of rawcount
 rownames(anno) <- anno$SampleName
-```
-
-
-```{r}
 
 library(PCAtools)
 library(edgeR)
@@ -540,10 +416,7 @@ biplot(p,
        hline = 0, vline = 0,
        legendPosition = 'right',
        encircle = T )
-```
 
-
-```{r}
 table(anno$Group)
 
 dds <- DESeqDataSetFromMatrix(countData = round(rawcount), colData = anno, design = ~totalRNA_Batch+ Group )
@@ -555,13 +428,8 @@ dds <- DESeq(dds)
 
 ##ensure your data is a good fit for the DESeq2 model
 plotDispEsts(dds)
-```
-
-
-```{r}
 
 #Then, we can extract the normalized count values for these top 20 genes:
-
 ## normalized counts for top 20 significant genes
 #normalized_counts$gene <- row.names(normalized_counts)  
 #dds1 <- estimateSizeFactors(dds)
@@ -571,45 +439,17 @@ vst <- varianceStabilizingTransformation(dds, blind = TRUE)
 
 normalized_counts <- as.data.frame(assay(vst)) ##VST
 
-```
-
-```{r}
 #In case of multiple comparisons ## we need to change the contrast for every comparision
 
 contrast<- c("Group",firstC,SecondC)
 
 res <- results(dds, contrast=contrast)
-
 #View(data.frame(res))
-```
-
-
-```{r}
-###############
-library(tidyverse)
-library(ggplot2)
-library(ggrepel)
-#library(DEGreport)
-library(RColorBrewer)
-library(pheatmap)
 
 res_df <-data.frame(res)
 ### change names to hugo
 res_df <- res_df[row.names(res_df) %in%  all_Loopgenes,]
 res_df$gene <- row.names(res_df)
-
-
-```
-
-
-
-
-
-
-
-
-```{r}
-
 
 ##################### Subset the data frame
 #filtered_df <- res_df[res_df$gene %in% all_Loopgenes, ]
@@ -617,11 +457,6 @@ res_df$gene <- row.names(res_df)
 filtered_df <- res_df
 # View the filtered DataFrame
 print(filtered_df[,c("gene", "log2FoldChange", "pvalue", "padj")])
-```
-
-
-
-```{r}
 
 colnames(filtered_df)[colnames(filtered_df) == "gene"] <- "ensembl_gene_id"
 filtered_df <- filtered_df %>%
@@ -634,30 +469,17 @@ filtered_df <- filtered_df %>%
 head(filtered_df)
  
 filtered_df2 <- filtered_df
-```
-
-```{r}
 
 # Recalculate adjusted p-values (padj) for the filtered genes
 #filtered_df$new_padj <- p.adjust(filtered_df$pvalue, method = "BH")
-
-# Assuming your DataFrame is named 'df'
- 
+# Assuming your DataFrame is named 'df' 
 
 filtered_df <- filtered_df %>%
   filter((log2FoldChange > 1 | log2FoldChange < -1) & pvalue < 0.01)
 
-
-
 # View the filtered DataFrame
 print(filtered_df[,c("hgnc_symbol", "log2FoldChange", "pvalue", "padj")])
-```
 
-```{r}
-library(ggplot2)
-library(reshape2)
-library(dplyr)
-library(pheatmap)
 
 # Ensure rownames are gene names for better visualization
 selected_genes <- filtered_df$ensembl_gene_id
@@ -726,14 +548,6 @@ pheatmap(
 
 # Print the boxplot separately
 print(p1)
-```
-
-
-```{r}
-library(ggplot2)
-
-# library(ggplot2)
-library(dplyr)
 
 # Ensure `pvalue` does not contain NA and is log-transformed correctly
 filtered_df2 <- filtered_df2 %>%
@@ -743,7 +557,6 @@ filtered_df2 <- filtered_df2 %>%
   )
 
 # Create volcano plot using p-values instead of adjusted p-values
-library(ggplot2)
 library(ggrepel)
 
 p <- ggplot(filtered_df2, aes(x = log2FoldChange, y = neg_log10_pval, color = significant)) +
@@ -775,6 +588,3 @@ p <- ggplot(filtered_df2, aes(x = log2FoldChange, y = neg_log10_pval, color = si
 print(p)
 # Save the table as an image
 #ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/vacano.png", plot = p, width = 4, height = 3, dpi = 600, bg="white")
-
-```
-
