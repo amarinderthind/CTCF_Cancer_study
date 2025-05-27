@@ -6,7 +6,7 @@ library(readxl)
 library(foreach)
 library(doParallel)
 
-setwd("/g/data/ts38/ctcf-simulations/")
+setwd("/ctcf-simulations/")
 # Set file paths
 loops_path <- "loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv"
 #anno_path <- "Sample_level_data_v11_short.csv"
