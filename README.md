@@ -19,7 +19,7 @@ This repository contains R scripts used in the analysis of CTCF binding site mut
 ```
 ## License
 
-This software is released under an academic non-commercial use license.  
+This pipeline code is released under an academic non-commercial use license.  
 Use is permitted for academic research with proper citation.  
 Commercial use or redistribution (even modified versions) requires written permission.
 
