@@ -11,7 +11,7 @@ setwd("/motif-position-analysis/") ## Path for working directory
 
 # Read region coordinates (e.g. 3' UTR , in BED format) one at a time
 
-regions <- read.table("../oncdriveFML_regions_for_coverage/3utr_regions_hg38_Dragon.bed", header = FALSE, stringsAsFactors = FALSE)
+regions <- read.table("3utr_regions_hg38_Dragon.bed", header = FALSE, stringsAsFactors = FALSE)
 colnames(regions) <- c("chrom", "start", "end", "region")
 
 ## header names differs for CTCF co-ordinates so using following option
@@ -48,6 +48,7 @@ mut_gr <- GRanges(seqnames = mutation_positions$CHROM,
 ####################################################################
 # Step: Define the surrounding regions with multiple scaling factors
 ####################################################################
+
 library(data.table)
 library(BiocParallel)
 
@@ -85,13 +86,14 @@ compute_density_for_batch <- function(batch_idx, region_gr, mutation_positions, 
   for (scale in scaling_factors) {
     
     # Compute valid start and end ranges for the surrounding regions           ## DOWNSTREAM
+    
     start_pos <- pmax(end(region_gr_batch) + 1, 1)
     end_pos <- pmin(
       chromosome_lengths[as.character(seqnames(region_gr_batch))],
       end(region_gr_batch) + (scale * width(region_gr_batch))
     )
     
-    ## for upstream regions                                                     ## UPSTREAM
+     # Compute valid start and end ranges for the surrounding regions             ## UPSTREAM
    # start_pos <- pmax(start(region_gr_batch) - (scale * width(region_gr_batch)), 1)
     #end_pos <- pmax(start(region_gr_batch) - 1, 1)  # Ensure valid ends
     
