@@ -5,8 +5,9 @@ Cutaneous squamous cell carcinoma (cSCC) is the most common lethal malignancy wi
 
 This repository contains R scripts used in the analysis of CTCF binding site mutation for its role in cancer progression.
 
-1) `ctcf-gene-extarctions-both-inside-outside.r`  ctcf loop genes extraction both inside and outside loop upto 1000bp either side with ensemble-id.
-2) `various-Genomic-regions-Backgroud-rate-comparison.R`  Comparison of mutation density between genomic regions and their background using various scaling factors.
+1) `ctcf-gene-extarctions-both-inside-outside.r`  ctcf loop genes extraction both inside and outside loop upto 1000bp either side with ensemble-id.  
+
+2) `various-Genomic-regions-Backgroud-rate-comparison.R`  Comparison of mutation density between genomic regions and their background using various scaling factors.  
 3)  `Mutatinal-Density-overlapping-regions.R` Compare mutational Density between overlapping regions.
 4)  `motif-CTCFbs-specific-plots.R`  Script for ploting CTCFbs (normalized position) position specific mutational density (average across chorot).
 5) `Loop-genes-association.r` is used to explore the association between mutations in CTCF binding sites (CTCFbs) and changes in expression for genes located within TAD loops under investigation.
