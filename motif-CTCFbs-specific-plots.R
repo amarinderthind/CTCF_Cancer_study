@@ -1,16 +1,15 @@
-### Script is for 
-## Mutation density Across ±1kb CTCF Binding Sites and CTCFbs itself (wihtout substitution type) and plot 2 per sample multiplet
+### Mutation density Across ±1kb CTCF Binding Sites and CTCFbs itself (wihtout substitution type) and plot 2 per sample multiplet
 ## Length of loops distribution
 ## TMB CTCFbs vs Surround 1k (Stack) per sample (one plot not multiplet)
 
 ################################################################################################3#
 
-## For coputaional purpose files were loaded and saved before to use it again and again
+## For coputaional purpose files prepared in this step were saved and loaded later. 
 
 # # Step: List all VCF files in your directory (assuming all VCFs are in the same folder)
 # #vcf_files <- list.files(path = "../step1-intersect-vcf-with-loop-motif/", pattern = "\\.vcf$", full.names = TRUE)
 # 
-# vcf_files <- list.files(path = "/mnt/NAS_rrg/cSCC-omics-data/DNA/WGS-illumina/purple-mutech-pipeline-outputs/Vcf-first-pipeline-mutect2-purple/ALL_WGS_purple_somatic_till_feb_2023_except_CL", pattern = "\\.vcf$", full.names = TRUE)
+# vcf_files <- list.files(path = "Folder_name_where_vcf_stored", pattern = "\\.vcf$", full.names = TRUE)
 # vcf_files
 # 
 # # Initialize an empty data frame to store mutation data
@@ -41,8 +40,6 @@
 #   # Append the extracted mutation data for this sample to the main data frame
 #   mutation_positions <- rbind(mutation_positions, vcf_variants)
 # }
-# 
-# 
 # head(mutation_positions)
 # unique(mutation_positions$Sample)
 # 
@@ -54,7 +51,6 @@
 # unique(mutation_positions$Sample)
 # 
 # #write.csv(mutation_positions,"mutation_positions_summary_initial-ctcfbs-surrenounding_72_samples.csv")
-# #write.csv(mutation_positions,"mutation_positions_PURPLE_49samples_reading_via_vcfR_vcfData.csv")
 
 ######################################################################################################################
 ###############################
@@ -65,18 +61,18 @@ library(vcfR)
 library(GenomicRanges)
 library(tidyr)
 
-setwd("/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/")
+setwd("/2024-ctcf-dragen-additional-samples/")
 
-# Step: Read CTCF region coordinates (e.g., in BED format)
+# Read CTCF region coordinates (e.g., in BED format)
 ctcf_regions <- read.table("motifs_with_loops_sorted_hg38_1806.bed", header = FALSE, stringsAsFactors = FALSE)
 colnames(ctcf_regions) <- c("chrom", "start", "end","strand","5or3prime","loop")
 
-
-# Step: Sort data by loop and start position to ensure correct order
+# Sort data by loop and start position to ensure correct order
 df_sorted <- ctcf_regions %>%
   arrange(loop, start)
 
-# Step: Calculate the difference between the end of one CTCF binding site and the start of the next one
+# Calculate the difference between the end of one CTCF binding site and the start of the next one
+
 df_sorted <- df_sorted %>%
   group_by(loop) %>%  # Group by loop to calculate differences within each loop
   mutate(
@@ -90,7 +86,8 @@ df_sorted <- df_sorted %>%
 
 library(scales)
 
-# Step 1: Plot the distribution of loop lengths (differences) as a density plot with custom x-axis labels
+# Plot the distribution of loop lengths (differences) as a density plot with custom x-axis labels
+
 ggplot(df_sorted, aes(x = diff)) +
   geom_density(fill = "skyblue", color = "black", alpha = 0.7) +  # Fill with color and outline in black
   scale_x_continuous(
@@ -107,8 +104,6 @@ ggplot(df_sorted, aes(x = diff)) +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1,size = 10)  # Rotate x-axis labels by 45 degrees
   )
-
-
 
 ###############################
 
@@ -134,9 +129,6 @@ merged_gr <- reduce(c(ctcf_gr, surrounding_gr))
 mutation_positions <- read.csv("motif-position-analysis/mutation_positions_summary_72_samples.csv")
 mutation_positions2 <- mutation_positions
  
-
-
-
 # Step 6: Create a GenomicRanges object for mutations
 mut_gr <- GRanges(seqnames = mutation_positions$CHROM,
                   ranges = IRanges(start = mutation_positions$POS, end = mutation_positions$POS))
@@ -158,9 +150,8 @@ normalized_positions <- data.frame(
   Sample = mutations_in_ctcf$Sample
 )
 
-
-#################### PLOT 1
-# Step 8: Summarize mutation recurrence
+#################### PLOT 
+# Summarize mutation recurrence
 total_samples <- length(unique(normalized_positions$Sample))  # Count the unique sample IDs
 
 recurrence_summary <- normalized_positions %>%
@@ -172,8 +163,7 @@ recurrence_summary <- normalized_positions %>%
     Recurrence_Rate_per_mb = (Recurrence / Total_Loops) * 1e6  # Correct recurrence rate per Mb
   )
 
-
-# Step 9: Visualize the mutation recurrence across the ±1kb regions
+# Visualize the mutation recurrence across the ±1kb regions
 p <- ggplot(recurrence_summary, aes(x = Normalized_POS, y = Recurrence_Rate_per_mb)) +
   geom_line(color = "blue", linewidth = 1) +
   labs(
@@ -183,12 +173,12 @@ p <- ggplot(recurrence_summary, aes(x = Normalized_POS, y = Recurrence_Rate_per_
   ) +
   theme_minimal()
 
-
 # Save the plot with high resolution and custom size
 ggsave("motif-position-analysis/out-figures/1000bp-ctcf-mean-all-samples-per-mb.png", plot = p, dpi = 600, width = 7, height = 5, units = "cm", bg="white")
 
 ################ PLOT 2
-# Step 8: Summarize mutation recurrence for each sample
+
+# Summarize mutation recurrence for each sample
 recurrence_summary2 <- normalized_positions %>%
   group_by(Sample, Normalized_POS) %>%
   summarise(
@@ -198,7 +188,7 @@ recurrence_summary2 <- normalized_positions %>%
    Recurrence_Rate_per_mb = (Recurrence / Total_Loops) * 1e6 
   )
 
-# Step 9: Visualize the mutation recurrence across the ±1kb regions for each sample
+# Visualize the mutation recurrence across the ±1kb regions for each sample
 # ggplot(recurrence_summary2, aes(x = Normalized_POS, y = Recurrence_Rate, color = Sample, group = Sample)) +
 #   #geom_line(size = 1) +
 #   geom_point(size = 2, alpha = 0.7) +
@@ -259,139 +249,3 @@ ggplot(recurrence_summary2, aes(y = Normalized_POS, x = Sample, fill = Recurrenc
 #   theme_minimal()
 
 
-#############################################
-## PLOT CTCFbs vs surroundinig region mutation density for all samples; not position specific
-##############################################
-
-##write.csv(data,"mutation_density_surrunding-vs-ctcfbs-all-samples-summary.csv")
-#File is already save load for skipping the computation and go to end of the script
- 
-
-# Step 1: Read CTCF region coordinates (e.g., in BED format)
-# Example: CTCF regions are in a BED file (chrom, start, end)
-ctcf_regions <- read.table("motifs_with_loops_sorted_hg38_1806.bed", header = FALSE, stringsAsFactors = FALSE)
-colnames(ctcf_regions) <- c("chrom", "start", "end","Strand","motif_type","loop_number")
-
-
-
-# Convert CTCF regions into a GenomicRanges object
-ctcf_gr <- GRanges(seqnames = ctcf_regions$chrom,
-                   ranges = IRanges(start = ctcf_regions$start, end = ctcf_regions$end))
-
-# Step 2: Define the surrounding region ±1kb (1000 bp) around each CTCF region
-surrounding_gr <- GRanges(
-  seqnames = seqnames(ctcf_gr),
-  ranges = IRanges(
-    start = start(ctcf_gr) - 990,  # 1kb upstream of CTCF
-    end = end(ctcf_gr) + 990       # 1kb downstream of CTCF
-  )
-)
-
-# Step 3: List all VCF files in your directory (assuming all VCFs are in the same folder)
-vcf_files <- list.files(path = "step1-intersect-vcf-with-loop-motif/", pattern = "\\.vcf$", full.names = TRUE)
-
-
-# Initialize an empty data frame to store mutation density for all samples
-mutation_density_summary <- data.frame()
-
-# Step 4: Loop through each VCF file and calculate mutation density
-for (vcf_file in vcf_files) {
-  
-  # Read the VCF file using vcfR
-  vcf_data <- read.vcfR(vcf_file)
-  
-  # Step 5: Extract the variants from the VCF file
-  # Extract the genotype information (GT matrix) from the VCF file
-  vcf_df <- extract.gt(vcf_data)
-  
-  # Extract the variant positions (CHROM, POS) and combine with the genotype info
-  vcf_variants <- data.frame(
-    CHROM = vcf_data@fix[, "CHROM"],
-    POS = as.integer(vcf_data@fix[, "POS"])
-  )
-  
-  #### 
-  
-  # Step 6: Convert VCF mutations into a GenomicRanges object
-  mut_gr <- GRanges(seqnames = vcf_variants$CHROM,
-                    ranges = IRanges(start = vcf_variants$POS, end = vcf_variants$POS))
-  
-  # Step 7: Find mutations in CTCF region
-  ctcf_mutations <- findOverlaps(mut_gr, ctcf_gr)
-  
-  # Step 8: Find mutations in the surrounding ±1kb region
-  surrounding_mutations <- findOverlaps(mut_gr, surrounding_gr)
-  
-  # Step 9: Calculate mutation density (mutations per region length)
-  ctcf_density <- length(ctcf_mutations) / sum(width(ctcf_gr))
-  surrounding_density <- length(surrounding_mutations) / sum(width(surrounding_gr))
-  
-  # Step 10: Extract the sample name from the VCF filename (remove the file extension)
-  sample_name <- gsub("\\.vcf$", "", basename(vcf_file))
-  
-  # Step 11: Store the results in the summary data frame
-  mutation_density_summary <- rbind(mutation_density_summary, data.frame(
-    sample = sample_name,
-    ctcf_density = ctcf_density,
-    surrounding_density = surrounding_density
-  ))
-}
-
-
-library(tidyr)
-# Step 12: Summarize mutation densities
-mutation_density_summary <- mutation_density_summary %>%
-  pivot_longer(cols = c(ctcf_density, surrounding_density), 
-               names_to = "region", 
-               values_to = "mutation_density")
-
-library(dplyr)
-
-data <- mutation_density_summary
-# Transform the data
-data <- data %>%
-  mutate(
-    Sample = gsub("CSCC_", "", gsub("_vs_.*", "", sample)),  # Extract and trim Sample
-    Mutation_Density_per_Mb = mutation_density * 1e6        # Convert density to per Mb
-  )
-
-getwd()
-#write.csv(data,"mutation_density_surrunding-vs-ctcfbs-all-samples-summary.csv")
-
-
-# Step 13: Visualize the mutation density across all samples
-ggplot(data, aes(x = Sample, y = Mutation_Density_per_Mb, fill = region)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(
-    #title = "Mutation Density in CTCFbs Region vs ±1kb Surrounding Region",
-    x = "Sample",
-    y = "Mutations per Mb"
-  ) +
-  scale_fill_manual(values = c("ctcf_density" = "#1f77b4", "surrounding_density" = "#ff7f0e")) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, size =6))  # Rotate x-axis labels for better readability
-
-ggplot(data, aes(x = Sample, y = Mutation_Density_per_Mb, fill = region)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(
-    x = NULL,  # Remove x-axis label
-    y = "Mutations per Mb"
-  ) +
-  scale_fill_manual(values = c("ctcf_density" = "#1f77b4", "surrounding_density" = "#ff7f0e")) +
-  theme(
-    axis.text.x = element_blank(),  # Remove x-axis labels
-    axis.title.x = element_blank(),  # Remove x-axis title
-    axis.text.y = element_text(size = 8),  # Adjust y-axis text size
-    axis.title.y = element_text(size = 10),  # Adjust y-axis title size
-    plot.title = element_blank(),  # Remove the plot title
-    legend.position = "top",  # Place legend on top
-    legend.title = element_blank(),  # Remove legend title
-    legend.text = element_text(size = 10),  # Adjust legend text size
-    panel.grid.major = element_blank(),  # Remove major grid lines
-    panel.grid.minor = element_blank(),  # Remove minor grid lines
-    panel.background = element_blank(),  # Remove panel background
-    plot.background = element_blank()  # Remove plot background
-  )
-
-
-
- 
