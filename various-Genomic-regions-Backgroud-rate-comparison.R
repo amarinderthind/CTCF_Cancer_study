@@ -1,4 +1,5 @@
 ### Genomic Regions and BackGround mutational density comparison using various scaling factors
+## Either Upstream background or Downstream Background (Need to define)
 
 library(GenomicRanges)
 library(dplyr)
@@ -6,23 +7,22 @@ library(ggplot2)
 library(tidyr)
 
 getwd()
-setwd("/Users/athind/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/motif-position-analysis/")
+setwd("/motif-position-analysis/") ## Path for working directory
 
+# Read region coordinates (e.g. 3' UTR , in BED format) one at a time
 
-# Read region coordinates (e.g., in BED format)
 regions <- read.table("../oncdriveFML_regions_for_coverage/3utr_regions_hg38_Dragon.bed", header = FALSE, stringsAsFactors = FALSE)
 colnames(regions) <- c("chrom", "start", "end", "region")
 
-#regions <- read.table("motifs_with_loops_sorted_hg38_1806.bed", header = FALSE, stringsAsFactors = FALSE) 
+## header names differs for CTCF co-ordinates so using following option
 #colnames(regions) <- c("chrom", "start", "end", "strand","utr","loop") ## if using CTCF, go to next PLOT DIRECTLY
 
-# Read mutation positions (including multiple samples)
-# mutation_positions <- read.csv("mutation_positions_summary_72_samples.csv")
+# Read mutation positions (multiple samples) # File prepared using script named "motif-CTCFbs-specific-plots.R"
+mutation_positions <- read.csv("mutation_positions_summary_72_samples.csv")
 
 # Calculate the length (width) of each region
 regions$length <- regions$end - regions$start
 print(range(regions$length))  # Print the range of lengths to understand the distribution
-
 
 # Remove regions with length <= 3
 regions <- regions[regions$length > 3 ,]
@@ -37,7 +37,6 @@ ggplot(regions, aes(x = length)) +
   ) +
   theme_minimal()
 
-
 # Convert regions into a GenomicRanges object
 region_gr <- GRanges(seqnames = regions$chrom,
                      ranges = IRanges(start = regions$start, end = regions$end) )
@@ -46,22 +45,16 @@ region_gr <- GRanges(seqnames = regions$chrom,
 mut_gr <- GRanges(seqnames = mutation_positions$CHROM,
                   ranges = IRanges(start = mutation_positions$POS, end = mutation_positions$POS))
 
-
-
-#####################################################################################3
- 
- 
+####################################################################
 # Step: Define the surrounding regions with multiple scaling factors
-scaling_factors <- c(1,2)    #c(10,50,100,200,400,600,800)
-
-library(GenomicRanges)
+####################################################################
 library(data.table)
 library(BiocParallel)
 
+scaling_factors <- c(10,50,100,200,400,600,800)
+
 # Convert mutation_positions to data.table
 mutation_positions_dt <- as.data.table(mutation_positions)
-
- 
 
 # Placeholder for density results
 all_surrounding_density <- list()
@@ -69,7 +62,6 @@ all_surrounding_density <- list()
 # Batch processing of regions to reduce memory usage
 batch_size <- 500  # Adjust based on available memory
 num_batches <- ceiling(length(region_gr) / batch_size)
-
 
 # Predefined chromosome lengths based on GRCh38.p14
 chromosome_lengths <- c(
@@ -82,6 +74,7 @@ chromosome_lengths <- c(
 )
 
 compute_density_for_batch <- function(batch_idx, region_gr, mutation_positions, scaling_factors, chromosome_lengths) {
+
   # Subset regions for the current batch
   batch_start <- (batch_idx - 1) * batch_size + 1
   batch_end <- min(batch_idx * batch_size, length(region_gr))
@@ -91,19 +84,16 @@ compute_density_for_batch <- function(batch_idx, region_gr, mutation_positions, 
   
   for (scale in scaling_factors) {
     
-    # Compute valid start and end ranges for the surrounding regions ## DOWNSTREAM
+    # Compute valid start and end ranges for the surrounding regions           ## DOWNSTREAM
     start_pos <- pmax(end(region_gr_batch) + 1, 1)
     end_pos <- pmin(
       chromosome_lengths[as.character(seqnames(region_gr_batch))],
       end(region_gr_batch) + (scale * width(region_gr_batch))
     )
-
     
-    ## for upstream regions
+    ## for upstream regions                                                     ## UPSTREAM
    # start_pos <- pmax(start(region_gr_batch) - (scale * width(region_gr_batch)), 1)
     #end_pos <- pmax(start(region_gr_batch) - 1, 1)  # Ensure valid ends
-    
-    
     
     # Ensure the ranges are valid
     valid_indices <- which(start_pos <= end_pos)
@@ -165,7 +155,8 @@ region_mutation_indices <- queryHits(region_hits)
 mutation_positions <- mutation_positions %>%
   mutate(is_in_region = POS %in% mutation_positions$POS[region_mutation_indices])
 
-# Step: Now, calculate the mean mutation density for the actual region
+# Calculate the mean mutation density for the actual region
+
 region_sample_density <- mutation_positions %>%
   filter(is_in_region == TRUE) %>%
   group_by(Sample) %>%
@@ -175,7 +166,8 @@ region_sample_density <- mutation_positions %>%
 # Calculate the mean region density across all samples
 mean_region_density <- mean(region_sample_density$region_density)
 
-# Step: Add the region density as a comparison entry to the result
+# Add the region density as a comparison entry to the result
+
 mean_surrounding_density <- bind_rows(
   mean_surrounding_density,
   data.frame(scaling_factor = "Region", mean_density = mean_region_density)
@@ -192,7 +184,8 @@ sorted_levels <- c("Region", paste0(sort(scaling_values), " x width"))
 mean_surrounding_density$scaling_factor <- factor(mean_surrounding_density$scaling_factor, 
                                                   levels = sorted_levels)
 
-# Step: Visualize the comparison of mean mutation density across the region and different scaling factors
+# Visualize the comparison of mean mutation density across the region and different scaling factors
+
 ggplot(mean_surrounding_density, aes(x = scaling_factor, y = mean_density, fill = scaling_factor)) +
   geom_bar(stat = "identity") +
   labs(
