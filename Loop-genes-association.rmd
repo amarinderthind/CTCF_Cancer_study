@@ -121,14 +121,10 @@ for (loop_chk in loop_chunks) {
     # Subset DE results
     filtered_df <- res_df[res_df$gene %in% loop_genes, ]
 
-    
-    # Recalculate adjusted p-values (padj) for the filtered genes
-filtered_df$new_padj <- p.adjust(filtered_df$pvalue, method = "BH")
-
 
 # Identify significant genes
     significant_genes <- filtered_df %>%
-      filter(abs(log2FoldChange) > 1 & new_padj  < 0.05)
+      filter(abs(log2FoldChange) > 1 & padj  < 0.05)
 
     # Summary Table
     data.frame(
