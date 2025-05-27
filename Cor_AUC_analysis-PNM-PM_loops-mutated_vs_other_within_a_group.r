@@ -11,13 +11,13 @@ library(pROC)
 library(infotheo)
 
 # Load mutation matrix
-table_path <- "Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv"
+table_path <- "loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv"
 Mut_matrix <- read_csv(table_path) |> as.data.frame()
 rownames(Mut_matrix) <- Mut_matrix$...1
 Mut_matrix <- Mut_matrix[, -1]
 
 # Load and filter metadata
-meta <- read.csv("Dropbox/Amarinder/Sample_level_data_v11_short.csv")
+meta <- read.csv("Sample_level_data_v11_short.csv")
 rownames(meta) <- meta$sample
 meta <- subset(meta, Group %in% c("PRI_NonMet", "PRI_Met"))
 gc_sample <- c("CSCC_0015-M1", "CSCC_0023-M1", "CSCC_0021-P1")
@@ -110,9 +110,9 @@ meta <- subset(meta, SampleName %in% common)
 
 # Load loop-specific gene lists and raw counts
 # Load static data
-all_genes <- read.csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf/all_gene_biomart.csv")
-gene_list_loop <- read.csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/Step1.b-extraction-of-loops-gene-list/Loops_with_gene_list_combine-inside-and-1000bp-outside-.csv")
-rawcount_ori <- read_csv("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/feature_count-v3-80samples/ftype-exon-fattr-gene_id/countmatrix_genes_Modified_samp_names-unique-ensemble-id-v2.csv") |> as.data.frame()
+all_genes <- read.csv("all_gene_biomart.csv")
+gene_list_loop <- read.csv("Step1.b-extraction-of-loops-gene-list/Loops_with_gene_list_combine-inside-and-1000bp-outside-.csv")
+rawcount_ori <- read_csv("ftype-exon-fattr-gene_id/countmatrix_genes_Modified_samp_names-unique-ensemble-id-v2.csv") |> as.data.frame()
 
 
 rownames(rawcount_ori) <- rawcount_ori[[1]]
@@ -130,15 +130,6 @@ loops3 <- loops2
 for (loop_id in loop_ids) {
   cat("\n\nProcessing", loop_id, "...\n")
   
-  # Filter mutation and metadata
-  
-  
-  
-  # if(loop_id %in% c("loop_70","loop_95","loop_657","loop_53")) {
-  #   meta <- subset(meta2, Group %in% c("PRI_Met"))  # special case filtering
-  # } else {
-  #   meta <- subset(meta2, Group %in% c("PRI_NonMet"))  # default case filtering (same here)
-  # }
   
   loops2 <- loops3[, meta$SampleName, drop = FALSE]
   
