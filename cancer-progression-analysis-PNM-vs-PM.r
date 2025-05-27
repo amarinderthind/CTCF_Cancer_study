@@ -1,6 +1,6 @@
 # Title: "Cancer progression Analysis (diffentially expressed loops) and integrated RNA-Seq "
-# Author: "Amarinder Thind"
-setwd("/Users/athind/")
+
+setwd("/home/athind/")
 
 #### DE for loop 
 library(dplyr)
@@ -32,7 +32,6 @@ meta <- read.csv("Sample_level_data_v11_short.csv", sep=',')
 row.names(meta) <- meta$sample
 meta <- subset(meta, Group %in% c("PRI_NonMet", "PRI_Met"))
 
-
 ## EXCLUDE - Extreme GC Bias Sample
 gc_sample <- c("CSCC_0015-M1","CSCC_0023-M1","CSCC_0021-P1")
 meta <- meta[!(meta$SampleName %in% gc_sample), ]
@@ -53,7 +52,7 @@ dim(mut)
 
 #mut <-mut[1:118,1:36] ## sort based on group
 
-## check data is sorted
+# check data is sorted
 rownames(meta) == colnames(mut)
 meta$Group ## check the order of the Groups
 
@@ -78,7 +77,7 @@ head(mut1_pval[,(ncol(mut1_pval)-10):ncol(mut1_pval)])
 
 compare_groups <- function(data, var) {
   tab <- table(data$group, data[, var])
-  if (min(tab) >= 5) {  ## minimum 5 value in sub of confusion matrix is aspected
+  if (min(tab) >= 5) {                          ## minimum 5 value in sub of confusion matrix is aspected
     test <- chisq.test(tab)
   } else {
     test <- fisher.test(tab)
@@ -96,9 +95,6 @@ Primary_only[var_names] <- lapply(Primary_only[var_names], function(x) ifelse(x 
 # Perform statistical tests between primary and metastasis groups
 results <- lapply(var_names, function(var) compare_groups(Primary_only, var))
 results <- do.call(rbind, results)
-
-# Adjust p-values using BH method
-#results$p_adjusted <- p.adjust(results$p_value, method = "BH")
 
 # Combine data and results
 Primary_only <- t(Primary_only)
@@ -180,7 +176,7 @@ p <- ggplot(plot_data, aes(x = reorder(loop_id, -abs(Count_mod)), y = Count_mod,
 
 print(p)
 
-#ggsave("DEloop_PNM-vsPM.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white")
+ggsave("DEloop_PNM-vsPM.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white")
 
 loops <- combined_primary
 colnames(loops)
@@ -247,7 +243,7 @@ gene_list_loop <- gene_list_loop %>%
 
 # Print summary of unmapped Ensembl IDs
 if (length(unmapped_ids) > 0) {
-  cat("⚠️ Unmapped Ensembl IDs (showing up to 20):\n")
+  cat("Unmapped Ensembl IDs (showing up to 20):\n")
   print(head(unmapped_ids, 20))
   cat(sprintf("Total unmapped IDs: %d\n", length(unmapped_ids)))
 }
@@ -266,6 +262,7 @@ cleaned_genes <- DE_loops_related_genes[DE_loops_related_genes != ""]
 # Split entries with multiple genes into individual genes and trim whitespaces
 split_genes <- unlist(strsplit(cleaned_genes, ",\\s*"))
 #split_genes
+
 # Remove any extra spaces around gene names
 split_genes <- trimws(split_genes)
 # Remove duplicate entries
@@ -314,7 +311,7 @@ p <- ggplot(temp1_long, aes(x = reorder(loop_id, -MutCount), y = MutCount, fill 
 
 print(p)
 
-#ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/DEloop_PNM-vsPM_with_genes_info.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white") 
+ggsave("DEloop_PNM-vsPM_with_genes_info.png", plot = p, dpi = 600, width = 4, height = 3, units = "in", bg="white") 
 
 # Specify the order of loop identifiers
 ordered_loops <- c("loop_818", "loop_937", "loop_70", "loop_390", "loop_284", 
@@ -347,7 +344,7 @@ for (i in 1:nrow(shorttb)) {
     grob_index <- which(names(table_plot$grobs) == grob_name)
     
     if (length(grob_index) > 0) {
-#      table_plot$grobs[[grob_index]]$gp <- gpar(fontface = "italic")
+         #      table_plot$grobs[[grob_index]]$gp <- gpar(fontface = "italic")
       table_plot$grobs[[grob_index]]$gp <- gpar(fontface = "italic", fontfamily = "Times")
 
     }
@@ -429,8 +426,8 @@ dds <- DESeq(dds)
 ##ensure your data is a good fit for the DESeq2 model
 plotDispEsts(dds)
 
-#Then, we can extract the normalized count values for these top 20 genes:
-## normalized counts for top 20 significant genes
+#  extract the normalized count values for these top  genes:
+## normalized counts for top significant genes
 #normalized_counts$gene <- row.names(normalized_counts)  
 #dds1 <- estimateSizeFactors(dds)
 
@@ -468,18 +465,13 @@ filtered_df <- filtered_df %>%
 # Check the result
 head(filtered_df)
  
-filtered_df2 <- filtered_df
-
-# Recalculate adjusted p-values (padj) for the filtered genes
-#filtered_df$new_padj <- p.adjust(filtered_df$pvalue, method = "BH")
-# Assuming your DataFrame is named 'df' 
+#filtered_df2 <- filtered_df
 
 filtered_df <- filtered_df %>%
   filter((log2FoldChange > 1 | log2FoldChange < -1) & pvalue < 0.01)
 
 # View the filtered DataFrame
 print(filtered_df[,c("hgnc_symbol", "log2FoldChange", "pvalue", "padj")])
-
 
 # Ensure rownames are gene names for better visualization
 selected_genes <- filtered_df$ensembl_gene_id
@@ -587,4 +579,4 @@ p <- ggplot(filtered_df2, aes(x = log2FoldChange, y = neg_log10_pval, color = si
 
 print(p)
 # Save the table as an image
-#ggsave("Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/Manuscript_abstract/vacano.png", plot = p, width = 4, height = 3, dpi = 600, bg="white")
+ggsave(vacano.png", plot = p, width = 4, height = 3, dpi = 600, bg="white")
