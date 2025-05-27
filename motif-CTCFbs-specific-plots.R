@@ -1,12 +1,13 @@
-### Mutation density Across CTCF Binding Sites (Normalized positions) 
-## Length of loops distribution
-## TMB CTCFbs vs Surround 1k (Stack) per sample (one plot not multiplet)
+## Script for 3 main things as follows: 
+# (A) Mutation density Across CTCF Binding Sites (Normalized positions) 
+# (B) Length of loops distribution
+# (C) TMB CTCFbs vs Surround 1k (Stack) per sample (one plot not multiplet)
 
-################################################################################################3#
+####################################################################################
+## For computaional purpose files prepared in this step were saved and loaded later. 
+######################################################################################
 
-## For coputaional purpose files prepared in this step were saved and loaded later. 
-
-# # Step: List all VCF files in your directory (assuming all VCFs are in the same folder)
+# # List all VCF files in your directory (assuming all VCFs are in the same folder)
 # #vcf_files <- list.files(path = "../step1-intersect-vcf-with-loop-motif/", pattern = "\\.vcf$", full.names = TRUE)
 # 
 # vcf_files <- list.files(path = "Folder_name_where_vcf_stored", pattern = "\\.vcf$", full.names = TRUE)
@@ -15,7 +16,7 @@
 # # Initialize an empty data frame to store mutation data
 # mutation_positions <- data.frame()
 # 
-# # Step: Loop through each VCF file and extract mutation positions
+# # Loop through each VCF file and extract mutation positions
 # for (vcf_file in vcf_files) {
 #   
 #   print("reading file: ")
@@ -23,7 +24,7 @@
 #   # Read the VCF file using vcfR
 #   vcf_data <- read.vcfR(vcf_file)
 #   
-#   # Step 6: Extract the variant positions (CHROM, POS) from the VCF file
+#   # Extract the variant positions (CHROM, POS) from the VCF file
 #   vcf_variants <- data.frame(
 #     CHROM = vcf_data@fix[, "CHROM"],
 #     POS = as.integer(vcf_data@fix[, "POS"]),
@@ -53,6 +54,7 @@
 # #write.csv(mutation_positions,"mutation_positions_summary_initial-ctcfbs-surrenounding_72_samples.csv")
 
 ######################################################################################################################
+
 # Load necessary libraries
 library(ggplot2)
 library(dplyr)
