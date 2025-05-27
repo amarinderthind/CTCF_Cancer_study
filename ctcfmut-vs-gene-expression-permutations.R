@@ -1,6 +1,5 @@
 # Load necessary libraries
 
-
 library(readr)
 library(readxl)
 
@@ -156,12 +155,9 @@ for (loop_chk in loop_chunks) {
       
       filtered_df <- res_df[res_df$gene %in% all_Loopgenes & !is.na(res_df$padj), ]
 
-# Recalculate adjusted p-values (padj) for the filtered genes
-filtered_df$new_padj <- p.adjust(filtered_df$pvalue, method = "BH")
-
   # Filter based on log2FoldChange and padj
 significant_genes <- filtered_df %>%
-filter((log2FoldChange < -1 | log2FoldChange > 1) & new_padj < 0.05)
+filter((log2FoldChange < -1 | log2FoldChange > 1) & padj < 0.05)
 
       
       summary_table <- data.frame(
