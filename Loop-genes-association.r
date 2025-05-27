@@ -1,5 +1,6 @@
-## title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops"
-#### 1. Load Required Packages
+## Title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops"
+
+# Load Required Packages
 library(readr)
 library(dplyr)
 library(DESeq2)
@@ -26,8 +27,7 @@ common <- intersect(anno2$wgs_samples, anno2$totalRNAseq)
 common1 <- common[!grepl("MCL", common, ignore.case = TRUE) & !is.na(common)]
 print(paste("Number of shared samples (excluding cell lines):", length(common1)))
 
-#### 3. Prepare Raw Count Matrix
-
+#### Prepare Raw Count Matrix
 
 # Load raw counts
 rawcount_ori <- read_csv("/path/to/countmatrix_genes.csv")
@@ -43,7 +43,8 @@ rawcount_ori[is.na(rawcount_ori)] <- 0
 # Filter genes expressed in ≥15% of samples
 keep <- rowSums(rawcount_ori > 0) >= round(ncol(rawcount_ori) * 0.15)
 rawcount_ori <- rawcount_ori[keep,]
-####4. Load Gene Lists Associated with Loops
+
+### Load Gene Lists Associated with Loops
 gene_list_loop <- read.csv("Step1.b-extraction-of-loops-gene-list/Loops_with_gene_list_combine-inside-and-1000bp-outside-.csv")
 
 
@@ -52,7 +53,7 @@ gene_list_loop$ensembl_gene_id <- gsub("\\s+", "", gene_list_loop$ensembl_gene_i
 
 all_genes <- read_csv("all_gene_biomart.csv")
  
-####5. Preprocess Loops for DE Analysis
+### Preprocess Loops for DE Analysis
 
 # Keep only columns corresponding to shared RNA-seq samples
 loops <- loops[, colnames(loops) %in% c(anno2$totalRNAseq, "...1")]
@@ -60,8 +61,7 @@ loops <- loops[, colnames(loops) %in% c(anno2$totalRNAseq, "...1")]
 # Filter loops with mutations present in at least 4 samples
 loops2 <- loops[rowSums(loops > 0) > 3, ]
 
-#### 6. Differential Expression Analysis Using DESeq2
-
+#### Differential Expression Analysis Using DESeq2
 
 # Parallelization Setup
 numCores <- detectCores() - 2
@@ -123,8 +123,9 @@ for (loop_chk in loop_chunks) {
     significant_genes <- filtered_df %>%
       filter(abs(log2FoldChange) > 1 & padj  < 0.05)
 
-    # Summary Table
-    data.frame(
+# Summary Table
+
+   data.frame(
       Loop_Name = value,
       Number_of_Significant_Genes = nrow(significant_genes),
       Gene_Names = if (nrow(significant_genes) > 0) paste(significant_genes$gene, collapse = ", ") else "None",
@@ -143,8 +144,7 @@ for (loop_chk in loop_chunks) {
 
 # Stop parallel processing
 stopCluster(cl)
-####7. Post-processing and Summary Table Creation
-
+### Post-processing and Summary Table Creation
 
 # Format output
 colnames(Final_summary2) <- c("Loop", "No_Sig_Genes", "Sig_Genes", "No_Genes_RNAseq",
