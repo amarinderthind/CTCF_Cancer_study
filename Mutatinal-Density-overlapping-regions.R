@@ -4,7 +4,7 @@ library(dplyr)
 library(ggplot2)
 
 # Set working directory
-setwd("/home/singh/Dropbox/Amarinder/Amarinder_main_projects/CTCF_motif_AT/2024-ctcf-dragen-additional-samples/TMB-per-group-per-sample-per-substitutionetc/Site-5-or-3-TMbs-with-others/re-caculations-tmb-extract-Overlap-co-ordinates-then-mut-them-TMB/")
+setwd("/caculations-tmb-extract-Overlap-co-ordinates-then-mut-them-TMB/")
 
 # Function to load BED files
 read_bed <- function(file_path) {
@@ -18,15 +18,15 @@ read_bed <- function(file_path) {
 }
 
 # Load genomic region coordinates
-ctcf_regions <- read_bed("../../../motifs_with_loops_sorted_hg38_1806.bed")
-utr3_regions <- read_bed("../../../oncdriveFML_regions_for_coverage/3utr_regions_hg38_Dragon.bed")
-utr5_regions <- read_bed("../../../oncdriveFML_regions_for_coverage/5utr_regions_hg38_Dragon.bed")
-promoter_regions <- read_bed("../../../oncdriveFML_regions_for_coverage/promoters_regions_hg38_Dragon.bed")
-lnc_regions <- read_bed("../../../oncdriveFML_regions_for_coverage/LongNC_regions_hg38_Dragon.bed")
-cds_regions <- read_bed("../../../oncdriveFML_regions_for_coverage/CDS_regions_hg38_Dragon.bed")
+ctcf_regions <- read_bed("motifs_with_loops_sorted_hg38_1806.bed")
+utr3_regions <- read_bed("3utr_regions_hg38_Dragon.bed")
+utr5_regions <- read_bed("5utr_regions_hg38_Dragon.bed")
+promoter_regions <- read_bed("promoters_regions_hg38_Dragon.bed")
+lnc_regions <- read_bed("LongNC_regions_hg38_Dragon.bed")
+cds_regions <- read_bed("CDS_regions_hg38_Dragon.bed")
 
 # Load mutation positions
-#mutation_positions <- read.csv("../../../motif-position-analysis/mutation_positions_summary_72_samples.csv")
+mutation_positions <- read.csv("mutation_positions_summary_72_samples.csv")
 
 # Function to create GenomicRanges objects
 create_gr <- function(region_df, include_loopname = FALSE) {
