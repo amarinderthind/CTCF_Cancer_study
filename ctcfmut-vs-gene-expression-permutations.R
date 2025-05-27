@@ -79,7 +79,7 @@ loop_chunks <- split(loops2$...1, ceiling(seq_along(loops2$...1) / chunk_size))
 set.seed(511)
 Final_summary3 <- data.frame()
 
-for (ite in 1:20) {
+for (ite in 1:1000) {
 
       	Final_summary2 <- data.frame()
 
@@ -190,5 +190,5 @@ filter((log2FoldChange < -1 | log2FoldChange > 1) & padj < 0.05)
 stopCluster(cl)
 
 # Write results to CSV
-write.csv(Final_summary3, "Simulation_TEST20-simulations_seed511-part1_NewPadjust_afterOriginal_padjust_NA_filter.csv", row.names = FALSE)
+write.csv(Final_summary3, "Permutations_1000_seed511_ctcf-vs-genes-results.csv", row.names = FALSE)
 
