@@ -4,11 +4,11 @@
 # Load necessary libraries
 library(readr)
 library(readxl)
-
 library(foreach)
 library(doParallel)
 
 setwd("/ctcf-simulations/")
+
 # Set file paths
 loops_path <- "loops-vs-mutational-matrix-EXCLUDE_GC_FAILED_3SAMPLES.csv"
 #anno_path <- "Sample_level_data_v11_short.csv"
@@ -76,9 +76,8 @@ chunk_size <- 48
 
 loop_chunks <- split(loops2$...1, ceiling(seq_along(loops2$...1) / chunk_size))
 
-
-
 set.seed(511)
+
 Final_summary3 <- data.frame()
 
 for (ite in 1:1000) {
@@ -86,16 +85,13 @@ for (ite in 1:1000) {
       	Final_summary2 <- data.frame()
 
 cat("Starting Iteration:", ite, "\n")
-  
-  
-
 
 for (loop_chk in loop_chunks) {
 
     #cat("Starting Analysis for Loop:", loop_chk, "\n")
     
     Final_summary <- foreach(value = loop_chk, .combine = 'rbind', .packages = c('dplyr')) %dopar% {
-#value="loop_355"
+                #value="loop_355"
             
       library(DESeq2)
       library(edgeR)
