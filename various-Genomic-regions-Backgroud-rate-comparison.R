@@ -8,25 +8,24 @@ library(tidyr)
 getwd()
 setwd("/motif-position-analysis/")
 
-# Step: Read region coordinates (e.g., in BED format)
+# Read region coordinates (one at a time) (e.g., in BED format)
 regions <- read.table("3utr_regions_hg38_Dragon.bed", header = FALSE, stringsAsFactors = FALSE)
 colnames(regions) <- c("chrom", "start", "end", "region")
 
 #regions <- read.table("motifs_with_loops_sorted_hg38_1806.bed", header = FALSE, stringsAsFactors = FALSE) 
 #colnames(regions) <- c("chrom", "start", "end", "strand","utr","loop") ## if using CTCF, go to next PLOT DIRECTLY
 
-# Step: Read mutation positions (including multiple samples)
+# Read mutation positions (including multiple samples)
  #mutation_positions <- read.csv("motif-position-analysis/mutation_positions_summary_72_samples.csv")
 
-# Step: Calculate the length (width) of each region
+# Calculate the length (width) of each region
 regions$length <- regions$end - regions$start
 print(range(regions$length))  # Print the range of lengths to understand the distribution
-
 
 # Remove regions with length <= 3
 regions <- regions[regions$length > 3 ,]
 
-# Step: Plot the density of region lengths
+# Plot the density of region lengths
 ggplot(regions, aes(x = length)) +
   geom_density(fill = "#1f77b4", color = "black", alpha = 0.7) +
   labs(
@@ -36,15 +35,13 @@ ggplot(regions, aes(x = length)) +
   ) +
   theme_minimal()
 
-# # Define bins for region lengths based on quantiles (10 bins)
+## Define bins for region lengths based on quantiles (10 bins)
 regions$category <- cut(
   regions$length, 
   breaks = unique(quantile(regions$length, probs = 0:10 / 10, na.rm = TRUE)),
   include.lowest = TRUE, 
   labels = FALSE
 )
-
-
 
 
 # # Use pretty for evenly spaced intervals
@@ -57,24 +54,24 @@ regions$category <- cut(
 
 Bins_breakdowninfo <- pretty(regions$length, n = 10)
 
-# Step: Convert regions into a GenomicRanges object
+# Convert regions into a GenomicRanges object
 region_gr <- GRanges(seqnames = regions$chrom,
                      ranges = IRanges(start = regions$start, end = regions$end), category = regions$category)
 
-# Step: Create a GenomicRanges object for mutations
+# Create a GenomicRanges object for mutations
 mut_gr <- GRanges(seqnames = mutation_positions$CHROM,
                   ranges = IRanges(start = mutation_positions$POS, end = mutation_positions$POS))
 
-# Step: Find mutations that overlap with regions
+# Find mutations that overlap with regions
 region_mutations <- findOverlaps(mut_gr, region_gr)
 
-# Step: Create a dataframe with mutations and their corresponding categories
+# Create a dataframe with mutations and their corresponding categories
 mutation_counts <- data.frame(
   Sample = mutation_positions$Sample[queryHits(region_mutations)],  # Using indices to match with mutation_positions
   mutation_category = regions$category[subjectHits(region_mutations)]  # Use subjectHits to get region categories
 )
 
-# Step: Ensure all samples and mutation categories are represented, even if no mutations exist for some combinations
+# Ensure all samples and mutation categories are represented, even if no mutations exist for some combinations
 all_samples <- unique(mutation_positions$Sample)
 all_categories <- unique(regions$category)
 
@@ -96,7 +93,7 @@ mutation_density_by_category <- mutation_counts_full %>%
   ) %>%
   filter(!is.na(mutation_density_per_mb))  # Remove rows with NA density
 
-# Step: Visualize mutation density per category (separate plot for each category)
+# Visualize mutation density per category (separate plot for each category)
 ggplot(mutation_density_by_category, aes(x = Sample, y = mutation_density_per_mb, fill = as.factor(mutation_category))) +
   geom_bar(stat = "identity", position = "dodge") +
   labs(
@@ -109,42 +106,9 @@ ggplot(mutation_density_by_category, aes(x = Sample, y = mutation_density_per_mb
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for better readability
 
-# Step: Calculate mutation density for each category (bins 1 to 10) across all samples
-# Adjust for sample size by dividing mutation count by the number of samples
-num_samples <- length(unique(mutation_counts_full$Sample))  # Count the unique samples
+#####################################################################################
 
-mutation_density_by_bin <- mutation_counts_full %>%
-  group_by(mutation_category) %>%
-  summarise(
-    mutation_count = sum(mutation_count),  # Total number of mutations in each bin
-    total_length = sum(regions$length[regions$category == mutation_category], na.rm = TRUE),  # Total length for each bin
-    avg_mutation_density = mean(mutation_count / (total_length / 1e6), na.rm = TRUE)  # Average mutation density per bin
-  ) %>%
-  mutate(
-    mutation_density_per_mb = (mutation_count / (total_length / 1e6)) / num_samples  # Adjust density per Mb for sample size
-  ) %>%
-  filter(!is.na(mutation_density_per_mb))  # Remove rows with NA density
-
-# Optional: View the resulting table
-print(mutation_density_by_bin)
-
-# Step: Visualize mutation density by bin (category) across all samples, using average mutation density per bin
-ggplot(mutation_density_by_bin, aes(x = as.factor(mutation_category), y = mutation_density_per_mb, fill = as.factor(mutation_category))) +
-  geom_bar(stat = "identity", position = "dodge") +  # Create bar plot
-  labs(
-    #title = "Average Mutation Density by Bin (Category) Across All Samples",
-    x = "Mutation Category (Bin)",
-    y = "Mutations per Mb"
-  ) +
-  scale_fill_viridis_d() +  # Optional: Aesthetic for the color scale
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))  # Rotate x-axis labels for better readability
-
-
-#####################################################################################3
- 
- 
-# Step: Define the surrounding regions with multiple scaling factors
+# Define the surrounding regions with multiple scaling factors
 scaling_factors <- c(10,50,100,200,400,600,800)
 
 library(GenomicRanges)
@@ -153,8 +117,6 @@ library(BiocParallel)
 
 # Convert mutation_positions to data.table
 mutation_positions_dt <- as.data.table(mutation_positions)
-
- 
 
 # Placeholder for density results
 all_surrounding_density <- list()
@@ -194,9 +156,7 @@ compute_density_for_batch <- function(batch_idx, region_gr, mutation_positions, 
     
     ## for upstream regions
    # start_pos <- pmax(start(region_gr_batch) - (scale * width(region_gr_batch)), 1)
-    #end_pos <- pmax(start(region_gr_batch) - 1, 1)  # Ensure valid ends
-    
-    
+    #end_pos <- pmax(start(region_gr_batch) - 1, 1)  # Ensure valid ends    
     
     # Ensure the ranges are valid
     valid_indices <- which(start_pos <= end_pos)
@@ -232,7 +192,6 @@ compute_density_for_batch <- function(batch_idx, region_gr, mutation_positions, 
   return(batch_results)
 }
 
-
 # Running the sequential loop instead of parallel
 all_surrounding_density <- list()
 
@@ -245,11 +204,7 @@ for (batch_idx in seq_len(num_batches)) {
 combined_surrounding_density <- do.call(rbind, all_surrounding_density)
 
 # Continue with further analysis and visualization
-
-
- 
- 
-# Step: Calculate the mean mutation density for each surrounding region across all samples
+# Calculate the mean mutation density for each surrounding region across all samples
 mean_surrounding_density <- combined_surrounding_density %>%
   group_by(scaling_factor) %>%
   summarise(mean_density = mean(surrounding_density), .groups = "drop")
@@ -262,7 +217,7 @@ region_mutation_indices <- queryHits(region_hits)
 mutation_positions <- mutation_positions %>%
   mutate(is_in_region = POS %in% mutation_positions$POS[region_mutation_indices])
 
-# Step: Now, calculate the mean mutation density for the actual region
+#  Now, calculate the mean mutation density for the actual region
 region_sample_density <- mutation_positions %>%
   filter(is_in_region == TRUE) %>%
   group_by(Sample) %>%
@@ -272,7 +227,7 @@ region_sample_density <- mutation_positions %>%
 # Calculate the mean region density across all samples
 mean_region_density <- mean(region_sample_density$region_density)
 
-# Step: Add the region density as a comparison entry to the result
+# Add the region density as a comparison entry to the result
 mean_surrounding_density <- bind_rows(
   mean_surrounding_density,
   data.frame(scaling_factor = "Region", mean_density = mean_region_density)
@@ -289,7 +244,7 @@ sorted_levels <- c("Region", paste0(sort(scaling_values), " x width"))
 mean_surrounding_density$scaling_factor <- factor(mean_surrounding_density$scaling_factor, 
                                                   levels = sorted_levels)
 
-# Step: Visualize the comparison of mean mutation density across the region and different scaling factors
+#  Visualize the comparison of mean mutation density across the region and different scaling factors
 ggplot(mean_surrounding_density, aes(x = scaling_factor, y = mean_density, fill = scaling_factor)) +
   geom_bar(stat = "identity") +
   labs(
