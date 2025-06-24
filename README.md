@@ -1,5 +1,7 @@
 ## CTCF Binding Site Mutations: Linking Topologically Associated Domains Dysregulation to Cutaneous Squamous Cell Carcinoma Progression. 
 
+Preprint : https://www.researchsquare.com/article/rs-6844715/v1
+
 **Background**:
 Cutaneous squamous cell carcinoma (cSCC) is the most common lethal malignancy with metastatic potential. The high mutational burden in cSCC has made it difficult to under-stand the significance of variants in the noncoding and regulatory genome. This study presents the first investigation of mutations at CCCTC-binding factor binding sites (CTCFbs) of topologically associating domains (TADs) across defined stages of disease progression —primary tumours that have not metastasized, primary tumours that have metastasized, and lymph node metastasis
 
