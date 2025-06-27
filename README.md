@@ -2,10 +2,16 @@
 
 Preprint : https://www.researchsquare.com/article/rs-6844715/v1
 
-**Background**:
-Cutaneous squamous cell carcinoma (cSCC) is the most common lethal malignancy with metastatic potential. The high mutational burden in cSCC has made it difficult to under-stand the significance of variants in the noncoding and regulatory genome. This study presents the first investigation of mutations at CCCTC-binding factor binding sites (CTCFbs) of topologically associating domains (TADs) across defined stages of disease progression —primary tumours that have not metastasized, primary tumours that have metastasized, and lymph node metastasis
-
 This repository contains R scripts used in the analysis of CTCF binding site mutation for its role in cancer progression.
+
+**Background**:
+The high mutational burden in Cutaneous squamous cell carcinoma (cSCC) has made it difficult to under-stand the significance of variants in the noncoding and regulatory genome. This study presents the first investigation of mutations at CCCTC-binding factor binding sites (CTCFbs) of topologically associating domains (TADs) across defined stages of disease progression.
+ 
+ <p align="center">
+<img src="https://github.com/user-attachments/assets/52891726-edc7-41a4-bb34-6b6835643466" width=86% height=700>&nbsp; &nbsp; 
+</p>
+
+**Description of the workflow (See figure above):**
 
 1) `ctcf-gene-extarctions-both-inside-outside.r`  ctcf loop genes extraction both inside and outside loop upto 1000bp either side with ensemble-id.  
 
