@@ -27,8 +27,8 @@ CTCF_3site$start_1000 <- CTCF_3site$V3
 CTCF_3site$end_1000 <- CTCF_3site$V3 + 1000
  
 # Merge the two data frames based on column V6
-merged_df <- merge(CTCF_5site[, c("V1",   "V6","V5", "start_1000")], 
-                   CTCF_3site[, c("V1",   "V6", "V5", "end_1000")], 
+merged_df <- merge(CTCF_5site[, c("V1",   "V6","V5", "start_1000")], #take start from 5site
+                   CTCF_3site[, c("V1",   "V6", "V5", "end_1000")],  ##take end from 3site
                    by = c("V6"))
 
 # View the merged data frame
