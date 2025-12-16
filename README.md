@@ -1,6 +1,7 @@
 ## CTCF Binding Site Mutations: Linking Topologically Associated Domains Dysregulation to Cutaneous Squamous Cell Carcinoma Progression.
 
-Preprint : https://www.researchsquare.com/article/rs-6844715/v1
+Preprint : [Research Square article](https://www.researchsquare.com/article/rs-6844715/v1)
+
 
 This repository contains R scripts used in the analysis of CTCF binding site mutation for its role in cancer progression.
 
