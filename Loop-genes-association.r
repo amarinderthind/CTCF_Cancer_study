@@ -1,4 +1,4 @@
-## Title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops"
+## Title: "Differential Expression Analysis of RNA-seq Data Associated with Genomic Loops".
 
 ## Load Required Packages
 library(readr)
@@ -171,3 +171,4 @@ loops_with_sigDEG <- loops2[loops2$...1 %in% loops_sigDEG, ]
 # Save final outputs (if needed)
 # write.csv(Final_summary2, "Final_summary3_association_genesDE_vs_mut.csv")
 # write.csv(loops_with_sigDEG, "Loops_with_Significant_DEGs.csv")
+
